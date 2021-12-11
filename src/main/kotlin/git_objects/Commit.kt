@@ -17,6 +17,15 @@ data class Commit(
 	val tree = Tree.from(treeHash)
 	val parent = Commit.from(parentHash)
 
+	fun toGraphviz(): String {
+		var result = "\"$hash\" [shape=rect, color=gold, label=\"$description\"];\n"
+		result += "\"$hash\" -> \"$hash${tree.hash}\";\n${tree.toGraphviz(hash)}"
+		parent?.let {
+			result += "\"$hash\" -> \"${parent.hash}\";\n${parent.toGraphviz()}"
+		}
+		return result
+	}
+
 	companion object {
 		fun from(hash: String): Commit? {
 			val commitFile = File("$REPOSITORY$OBJECTS${hash.take(2)}\\${hash.substring(2)}")

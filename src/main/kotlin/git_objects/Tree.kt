@@ -18,6 +18,17 @@ data class Tree(
 	private val _blobs = mutableListOf<Blob>()
 	val blobs get() = _blobs as List<Blob>
 
+	fun toGraphviz(hashPrefix: String = ""): String {
+		var result = "\"$hashPrefix$hash\" [shape=\"circle\", label=\"$name\"];\n"
+		blobs.forEach {
+			result += "\"$hashPrefix$hash\" -> \"$hashPrefix${it.hash}\";\n${it.toGraphviz(hashPrefix)}"
+		}
+		trees.forEach {
+			result += "\"$hashPrefix$hash\" -> \"$hashPrefix${it.hash}\";\n${it.toGraphviz(hashPrefix)}"
+		}
+		return result
+	}
+
 
 	companion object {
 		private const val BLOB_MODE = "100644"
@@ -25,7 +36,9 @@ data class Tree(
 
 		fun from(hash: String, name: String = "repository"): Tree {
 			val treeFile = File("$REPOSITORY$OBJECTS${hash.take(2)}\\${hash.substring(2)}")
-			val byteLists = treeFile.readBytes().zlibDecompressByte()
+			val byteLists = treeFile
+				.readBytes()
+				.zlibDecompressByte()
 				.toList()
 				.split { it == 0.toByte() }
 				.drop(1)
@@ -53,7 +66,7 @@ data class Tree(
 						)
 					} else {
 						_blobs.add(
-							Blob.from(hashes[index])
+							Blob.from(hashes[index], objectName)
 						)
 					}
 				}
